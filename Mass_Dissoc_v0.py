@@ -1,3 +1,4 @@
+# this is a simple verison, it can and probably should be improved
 # solve dM/dt and dr/dt together
 
 import numpy as np
