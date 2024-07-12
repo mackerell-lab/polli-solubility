@@ -1,5 +1,9 @@
-# solve dM/dt, dM1/dt, dM2/dt together (simple distribution of radii)
-# don't account for change dr1dt affecting dM1dt
+# solve dM/dt, accounting for affect of changing radii (properly)
+# which required dr/dt and dz/dt. Note that, by Chain rule and when h=r:
+#   dr/dt = dr/dM * dM/dt
+#   dz/dt = dz/dr * dr/dM * dM/dt
+# Both dr and dz change with dM. Because of that, what we did before was mathematically incorrect (if minor).
+# as the particle shrinks (dr) the rate of dissolution also changes (dM). This is accounted for properly by these three diff eqs.
 
 import numpy as np
 import pandas as pd
