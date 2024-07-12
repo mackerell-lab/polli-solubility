@@ -7,6 +7,10 @@ Erik Nordquist, enord@outerbanks.umaryland.edu
 Prabin Baral, pbaral@outerbanks.umaryland.edu
 
 "The effectof particle size distribution on dissolution rate and oral absorption" Hintz and Johnson 1989 IJP elsevier
+HINTZ, R., & JOHNSON, K. (1989). The effect of particle size distribution on dissolution rate and oral absorption. International Journal of Pharmaceutics, 51(1), 9–17. doi:10.1016/0378-5173(89)90069-0 
+
+"A New modelling approach for dissolution of polydisperse powders"
+Zwaan, Frenning, IJP
 
 Contents:
 =============
