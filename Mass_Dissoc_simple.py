@@ -34,7 +34,7 @@ def dMdt(t, M, z, M_0, Cs, V):
 def solve_differential(z_var):
     t_span = (0, tmax)
     t_eval = np.linspace(t_span[0], t_span[1], tmax)
-    solution = solve_ivp(dMdt, t_span, [M_0], args=(z_var, M_0, Cs, V), t_eval=t_eval, method='RK45')
+    solution = solve_ivp(dMdt, t_span, [M_0], args=(z_var, M_0, Cs, V), t_eval=t_eval, method='Radau')
     M = solution.y[0]
     return t_eval, M 
 

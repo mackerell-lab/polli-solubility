@@ -15,9 +15,11 @@ Zwaan, Frenning, IJP
 Contents:
 =============
 
-* Mass_Dissoc_dMdrdz.py : (monodisperse) solves dM/dt the 'simple' way with r=r0, then accounting for the fact that dr & dz are functions of dM
+* Mass_Dissoc_2distribution.py : 2-size distribution sanity-check
+* Mass_Dissoc_distribution.py  : N-size distribution **NOTE**: there is numerical instability in this case, exacerbated by large r_0_std
 
 Previous versions:
+* Mass_Dissoc_dMdrdz.py : (monodisperse) solves dM/dt the 'simple' way with r=r0, then accounting for the fact that dr & dz are functions of dM
 * Mass_Dissoc_v0.py solve dM/dt and dr/dt for homogeneous particle distribution with radius r = r0(M/M0)**1/3
 *  formerly z_r_optimized.py :solve dM/dt and dr/dt for homogeneous particle distribution with radius r = r0(M/M0)**1/3
 * Mass_Dissoc_v1.py : solve system of (2) particle radii: dM/dt = dM1/dt, dM2/dt

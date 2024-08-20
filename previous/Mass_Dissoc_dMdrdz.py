@@ -32,13 +32,13 @@ def z_r(r):
 
 # Define the differential equation
 def dMdt(t, M, z, M_0, Cs, V):
-    return -z_r(r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
+    return -z_r(r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V)# if M > 0 else 0
 
 # Define the function to solve the differential equation and calculate the error
 def solve_differential(z_var):
     t_span = (0, tmax)
     t_eval = np.linspace(t_span[0], t_span[1], tmax)
-    solution = solve_ivp(dMdt, t_span, [M_0], args=(z_var, M_0, Cs, V), t_eval=t_eval, method='RK45')
+    solution = solve_ivp(dMdt, t_span, [M_0], args=(z_var, M_0, Cs, V), t_eval=t_eval, method='BDF')
     M = solution.y[0]
     return t_eval, M 
 
@@ -61,12 +61,12 @@ def MDsystem(t, y):
     return [dMdt, drdt, dzdt]
 
 initial_conditions = [M_0, r_0, z_r(r_0)]
-soln = solve_ivp(MDsystem, (0, tmax), initial_conditions, t_eval=t_eval)
+soln = solve_ivp(MDsystem, (0, tmax), initial_conditions, t_eval=t_eval, method='BDF')
 M = soln.y[0]
 r = soln.y[1]
 z = soln.y[2]
 
-plt.plot(soln.t, (M_0-M)/M_0*100, label='dM/dt properly')
+plt.plot(soln.t, (M_0-M)/M_0*100, label='M w/ dM/dt properly')
 
 plt.axhline(V*Cs/M_0*100, color='k',linestyle='--', label='Sat. Conc.')
 plt.xlabel('Time (min)', fontweight='bold')
