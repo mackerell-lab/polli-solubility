@@ -1,5 +1,5 @@
 # Introduce distribution, using the simplest situation (with function Z(r0_i) called within dM/dt)
-# a constant Z(r0)
+# dM_i/dt = -Z(r0_i) M0_i**(1/3) M_i**(2/3) ( Cs - (M0 - M)/V)
 
 import numpy as np
 import pandas as pd
@@ -45,19 +45,22 @@ t_eval, M = solve_differential(zinit)
 plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple')
 
 
+###################
 # Define a number of bins and calculate binomial/normal distribution of M0/r0
+
 N = 10
-tmax=100
+# can have r0 follow the normal distribution
 r_0_std = r_0*0.1 # standard-deviation of r_0 distribution
 r0 = norm.rvs(loc=r_0, scale=r_0_std, size=N+1)
 M0 = M_0*np.ones(N+1)
-weights = binom.pmf(np.arange(N), N-1, 0.5) # equivalent to: w=scipy.special.binom(N-1,np.arange(N)); w/=w.sum()
-M0[1:] = M0[1:] * weights
+# binomial weights = binom.pmf(np.arange(N), N-1, 0.5) # equivalent to: w=scipy.special.binom(N-1,np.arange(N)); w/=w.sum()
+M0[1:] = M0[1:] * binom.pmf(np.arange(N), N-1, 0.5)
 
+# distribution of N equations
 def Nsystem(t, M, M0, r0, Cs, V):
-  N = len(M)
-  dMdt = np.zeros(N) # initialize then assign
-  for i in range(1,N):
+  n = len(M) # N + 1, for [M, M_1, M_2, ..., M_N]
+  dMdt = np.zeros(n) # initialize then assign
+  for i in range(1,n):
     dMdt[i] = -z(r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V)# if M[0] > 0 else 0
   dMdt[0] = sum(dMdt[1:])
   return dMdt
