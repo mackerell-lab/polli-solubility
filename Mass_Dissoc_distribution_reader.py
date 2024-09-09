@@ -8,18 +8,27 @@ from scipy.integrate import solve_ivp
 from scipy.stats import norm, binom
 import matplotlib.pyplot as plt
 
-# Parameters
-M_0 = 5.0
-Cs = 0.001480764
-#Cs=2
-V = 100
-D = 0.000378
-q = 1232
-#r_0 = 0.00434
-r_0=0.001
-hcrit = 0.0016
+# read in parameters
+paramfile = 'data/Meloxicam_PBS.param'
+params = pd.read_csv(paramfile, header=None)
+print(params)
+# Format:
+#                           0           1
+#0         Solubility (mg/mL)       0.273
+#1  Particle Density (mg/cm3)      1448.7
+#2                    M0 (mg)           5
+#3                     V (mL)         100
+#4                D (cm2/min)     0.00048
+Cs = params.iloc[0,1]
+q  = params.iloc[1,1]
+M_0 = params.iloc[2,1]
+V = params.iloc[3,1]
+D = params.iloc[4,1]
+r_0=0.004
+hcrit = 0.005
 
 tmax=100
+filename='data/Meloxicam.csv'
 
 def h(r):
   return r if r < hcrit else hcrit
@@ -41,20 +50,11 @@ def solve_differential(z_var):
 
 # Solve the differential equation with z
 zinit=3 * D / (q * hcrit * r_0)
+print(f"M_0: {M_0}, Cs: {Cs}, V: {V}, zinit: {zinit}")
 t_eval, M = solve_differential(zinit)
 plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple')
 
 
-###################
-# Define a number of bins and calculate binomial/normal distribution of M0/r0
-
-N = 10
-# can have r0 follow the normal distribution
-r_0_std = r_0*0.4 # standard-deviation of r_0 distribution
-r0 = norm.rvs(loc=r_0, scale=r_0_std, size=N+1)
-M0 = M_0*np.ones(N+1)
-# binomial weights = binom.pmf(np.arange(N), N-1, 0.5) # equivalent to: w=scipy.special.binom(N-1,np.arange(N)); w/=w.sum()
-M0[1:] = M0[1:] * binom.pmf(np.arange(N), N-1, 0.5)
 
 # distribution of N equations
 def Nsystem(t, M, M0, r0, Cs, V):
@@ -66,25 +66,31 @@ def Nsystem(t, M, M0, r0, Cs, V):
   return dMdt
 
 t_eval = np.arange(0, tmax)
-for iter in range(100):
+for iter in range(10):
   print(iter+1,'\r', end='')
-  N = 20
-  # can have r0 follow the normal distribution
-  r_0_std = r_0*0.5 # standard-deviation of r_0 distribution
-  r0 = norm.rvs(loc=r_0, scale=r_0_std, size=N+1)
-  M0 = M_0*np.ones(N+1)
-  # binomial weights = binom.pmf(np.arange(N), N-1, 0.5) # equivalent to: w=scipy.special.binom(N-1,np.arange(N)); w/=w.sum()
-  M0[1:] = M0[1:] * binom.pmf(np.arange(N), N-1, 0.5)
 
-  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='Radau', rtol=1e-4, first_step=1e-6, max_step=1e-4)
+  ###################
+  # Read in data
+  r0_read, M0_read = np.loadtxt(filename, dtype=float, delimiter=',', unpack=True, skiprows=1)
+  N = len(M0_read)
+  M0 = np.zeros(N+1)
+  r0 = np.zeros(N+1)
+  M0[0] = M0_read.sum()
+  r0[0] = r0_read.mean()
+  M0[1:] = M0_read
+  M0 *= M_0/100 # convert mass percent to mass, % to ratio (0 to 1) and multiply by M_0
+  r0[1:] = r0_read
+  print(M0[0])
+
+  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='Radau', rtol=1e-4, first_step=1e-6, max_step=1e-2)
   #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
   m = soln.y[0]
-  plt.plot(soln.t, (M_0-m)/M_0 * 100, label=f'N = {N}', c='C1', alpha=0.2)
+  plt.plot(soln.t, (M_0-m)/M_0 * 100, label=f'N = {N}', c='C1', alpha=0.6)
 
-plt.axhline(V*Cs/M_0*100, color='k',linestyle='--', label='Sat. Conc.')
+#plt.axhline(V*Cs/M_0*100, color='k',linestyle='--', label='Sat. Conc.')
 plt.xlabel('Time (min)', fontweight='bold')
 plt.ylabel('Mass Dissociated (%)', fontweight='bold')
-plt.ylim([0, V*Cs/M_0*100*1.2])
+#plt.ylim([0, V*Cs/M_0*100*1.2])
 plt.grid()
 #plt.legend()
 plt.show()
