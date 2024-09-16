@@ -24,8 +24,7 @@ q  = params.iloc[1,1]
 M_0 = params.iloc[2,1]
 V = params.iloc[3,1]
 D = params.iloc[4,1]
-#r_0=0.004
-hcrit = 0.02
+hcrit = params.iloc[5,1]
 
 tmax=1200
 ###################
@@ -36,7 +35,6 @@ N = len(M0_read)
 M0 = np.zeros(N+1)
 r0 = np.zeros(N+1)
 r_0 = r0_read.mean()
-print(r_0)
 
 
 def h(r):
@@ -60,7 +58,7 @@ def solve_differential(z_var):
 
 # Solve the differential equation with z
 zinit=3 * D / (q * hcrit * r_0)
-print(f"M_0: {M_0}, Cs: {Cs}, V: {V}, zinit: {zinit}")
+print(f"M_0: {M_0}, Cs: {Cs}, V: {V}, hcrit: {hcrit}, zinit: {zinit}")
 t_eval, M = solve_differential(zinit)
 plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple')
 
