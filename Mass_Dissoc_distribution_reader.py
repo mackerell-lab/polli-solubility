@@ -24,11 +24,20 @@ q  = params.iloc[1,1]
 M_0 = params.iloc[2,1]
 V = params.iloc[3,1]
 D = params.iloc[4,1]
-r_0=0.004
-hcrit = 0.005
+#r_0=0.004
+hcrit = 0.02
 
-tmax=100
+tmax=1200
+###################
+# Read in data
 filename='data/Meloxicam.csv'
+r0_read, M0_read = np.loadtxt(filename, dtype=float, delimiter=',', unpack=True, skiprows=1)
+N = len(M0_read)
+M0 = np.zeros(N+1)
+r0 = np.zeros(N+1)
+r_0 = r0_read.mean()
+print(r_0)
+
 
 def h(r):
   return r if r < hcrit else hcrit
@@ -38,13 +47,14 @@ def z(r):
 
 # Define the differential equation
 def dMdt(t, M, M_0, Cs, V):
-  return -z(r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V)# if M > 0 else 0
+  return -z(r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
 
 # Define the function to solve the differential equation and calculate the error
 def solve_differential(z_var):
   t_span = (0, tmax)
   t_eval = np.arange(0, tmax)
-  solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V), t_eval=t_eval, method='Radau')
+  #solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V), t_eval=t_eval, method='Radau')
+  solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V), t_eval=t_eval, method='RK45')
   M = solution.y[0]
   return t_eval, M 
 
@@ -53,7 +63,6 @@ zinit=3 * D / (q * hcrit * r_0)
 print(f"M_0: {M_0}, Cs: {Cs}, V: {V}, zinit: {zinit}")
 t_eval, M = solve_differential(zinit)
 plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple')
-
 
 
 # distribution of N equations
@@ -69,25 +78,20 @@ t_eval = np.arange(0, tmax)
 for iter in range(10):
   print(iter+1,'\r', end='')
 
-  ###################
-  # Read in data
-  r0_read, M0_read = np.loadtxt(filename, dtype=float, delimiter=',', unpack=True, skiprows=1)
-  N = len(M0_read)
-  M0 = np.zeros(N+1)
-  r0 = np.zeros(N+1)
   M0[0] = M0_read.sum()
   r0[0] = r0_read.mean()
   M0[1:] = M0_read
   M0 *= M_0/100 # convert mass percent to mass, % to ratio (0 to 1) and multiply by M_0
   r0[1:] = r0_read
-  print(M0[0])
 
-  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='Radau', rtol=1e-4, first_step=1e-6, max_step=1e-2)
-  #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
+  #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='Radau', rtol=1e-4, first_step=1e-6, max_step=1e-2)
+  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
   m = soln.y[0]
   plt.plot(soln.t, (M_0-m)/M_0 * 100, label=f'N = {N}', c='C1', alpha=0.6)
 
-#plt.axhline(V*Cs/M_0*100, color='k',linestyle='--', label='Sat. Conc.')
+if V*Cs/M_0*100 >  100: lim=100
+else: lim= V*Cs/M_0*100
+plt.axhline(lim, color='k',linestyle='--', label='Sat. Conc.')
 plt.xlabel('Time (min)', fontweight='bold')
 plt.ylabel('Mass Dissociated (%)', fontweight='bold')
 #plt.ylim([0, V*Cs/M_0*100*1.2])
