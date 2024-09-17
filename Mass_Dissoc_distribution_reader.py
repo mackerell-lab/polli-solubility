@@ -26,7 +26,7 @@ V = params.iloc[3,1]
 D = params.iloc[4,1]
 hcrit = params.iloc[5,1]
 
-tmax=1200
+tmax=200
 ###################
 # Read in data
 filename='data/Meloxicam.csv'
@@ -34,7 +34,10 @@ r0_read, M0_read = np.loadtxt(filename, dtype=float, delimiter=',', unpack=True,
 N = len(M0_read)
 M0 = np.zeros(N+1)
 r0 = np.zeros(N+1)
-r_0 = r0_read.mean()
+r0_weighted = r0_read * (M0_read/M0_read.sum())
+r_0 = r0_weighted.mean() # r_0 calculated as weighted mean of r_0 distribution
+#print(r0_weighted.mean())
+#print(r0_read.mean())
 
 
 def h(r):
@@ -76,8 +79,8 @@ t_eval = np.arange(0, tmax)
 for iter in range(10):
   print(iter+1,'\r', end='')
 
-  M0[0] = M0_read.sum()
-  r0[0] = r0_read.mean()
+  M0[0] = 100 # still in Mass Percent now
+  r0[0] = r_0
   M0[1:] = M0_read
   M0 *= M_0/100 # convert mass percent to mass, % to ratio (0 to 1) and multiply by M_0
   r0[1:] = r0_read
