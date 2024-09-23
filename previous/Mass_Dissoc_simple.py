@@ -31,12 +31,12 @@ tmax=20
 def h(r):
     return r if r < hcrit else hcrit
 
-def z_r(r):
+def z_r(r, r_0):
     return 3 * D / (q * h(r) * r_0)
 
 # Define the differential equation
 def dMdt(t, M, z, M_0, Cs, V):
-    return -z_r(r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
+    return -z_r(r_0, r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
 
 # Define the function to solve the differential equation and calculate the error
 def solve_differential(z_var):

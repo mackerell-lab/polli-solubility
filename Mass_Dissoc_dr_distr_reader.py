@@ -1,4 +1,5 @@
-# Introduce distribution, using the simplest situation (with function Z(r0_i) called within dM/dt)
+# Distribution, with diminishing h (r_i decreases)
+# r_i = r0_i * (M_i/M0_i)**(1/3)
 # dM_i/dt = -Z(r0_i) M0_i**(1/3) M_i**(2/3) ( Cs - (M0 - M)/V)
 
 import numpy as np
@@ -53,7 +54,8 @@ def z(r, r_0):
 
 # Define the differential equation
 def dMdt(t, M, M_0, Cs, V):
-  return -z(r_0, r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
+  r = r_0 * (M/M_0)**(1/3)
+  return -z(r, r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
 
 # Define the function to solve the differential equation and calculate the error
 def solve_differential(z_var):
@@ -77,7 +79,8 @@ def Nsystem(t, M, M0, r0, Cs, V):
   dMdt = np.zeros(n) # initialize then assign
   for i in range(1,n):
     #dMdt[i] = -z(r0[i], r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
-    dMdt[i] = -z(r0[i], r0[0]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
+    r_i = r0[i] * (M[i]/M0[i])**(1/3) if M[i] > 0 else 0
+    dMdt[i] = -z(r_i, r0[0]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
   dMdt[0] = sum(dMdt[1:])
   return dMdt
 
