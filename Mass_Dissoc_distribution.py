@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 # Parameters
 M_0 = 5.0
-Cs = 0.001480764
+Cs = 0.02
 #Cs=2
 V = 100
 D = 0.000378
@@ -66,7 +66,7 @@ def Nsystem(t, M, M0, r0, Cs, V):
   return dMdt
 
 t_eval = np.arange(0, tmax)
-for iter in range(100):
+for iter in range(1):
   print(iter+1,'\r', end='')
   N = 20
   # can have r0 follow the normal distribution
@@ -76,7 +76,7 @@ for iter in range(100):
   # binomial weights = binom.pmf(np.arange(N), N-1, 0.5) # equivalent to: w=scipy.special.binom(N-1,np.arange(N)); w/=w.sum()
   M0[1:] = M0[1:] * binom.pmf(np.arange(N), N-1, 0.5)
 
-  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='Radau', rtol=1e-4, first_step=1e-6, max_step=1e-4)
+  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='Radau')# rtol=1e-4, first_step=1e-6, max_step=1e-4)
   #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
   m = soln.y[0]
   plt.plot(soln.t, (M_0-m)/M_0 * 100, label=f'N = {N}', c='C1', alpha=0.2)
