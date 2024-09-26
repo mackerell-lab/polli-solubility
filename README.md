@@ -2,7 +2,10 @@
 Erik Nordquist, enord@outerbanks.umaryland.edu
 Jim Polli, jpolli@rx.umaryland.edu
 
-Drug solubility differential equation solver
+Drug solubility differential equation solver, where the key equations are:
+r_i = r0_i * (M_i/M0_i)**(1/3)
+Z(r_i, r0_i) = 3 * D / (q * h(r_i) * r0_i)
+dM_i/dt = -Z(r_i, r0_i) M0_i**(1/3) M_i**(2/3) ( Cs - (M0 - M)/V)
 
 We are using a python library called scipy to solve these systems of differential equations.
 

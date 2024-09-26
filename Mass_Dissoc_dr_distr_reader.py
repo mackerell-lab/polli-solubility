@@ -1,8 +1,8 @@
 # Distribution, with diminishing h (r_i decreases)
 # Key equations:
 # r_i = r0_i * (M_i/M0_i)**(1/3)
-# 3 * D / (q * h(r_i) * r0_i)
-# dM_i/dt = -Z(r0_i) M0_i**(1/3) M_i**(2/3) ( Cs - (M0 - M)/V)
+# Z(r_i, r0_i) = 3 * D / (q * h(r_i) * r0_i)
+# dM_i/dt = -Z(r_i, r0_i) M0_i**(1/3) M_i**(2/3) ( Cs - (M0 - M)/V)
 
 import numpy as np
 import pandas as pd
