@@ -11,9 +11,14 @@ import matplotlib.pyplot as plt
 import sys
 
 # read in command-line arguments, filenames and solver method
-filename=sys.argv[1]
-paramfile=sys.argv[2]
-method=sys.argv[3] # such as RK45 or Radau
+drug='Ritonavir'#sys.argv[1] # e.g. Ritonavir
+solvent='PS80'#sys.argv[2] # e.g. PBS
+method='RK45' #sys.argv[3] # such as RK45 or Radau
+
+# 
+filename='data/'+drug+'.csv'
+paramfile='data/'+drug+'_'+solvent+'.param' # params, see below
+exptfile='data/expt_'+drug+'_'+solvent+'.csv' # experimental data file, Time (min),% dissolved,SEM
 
 # read in parameters
 params = pd.read_csv(paramfile, header=None)
@@ -80,7 +85,7 @@ def Nsystem(t, M, M0, r0, Cs, V):
   for i in range(1,n):
     #dMdt[i] = -z(r0[i], r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
     r_i = r0[i] * (M[i]/M0[i])**(1/3) if M[i] > 0 else 0
-    dMdt[i] = -z(r_i, r0[0]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
+    dMdt[i] = -z(r_i, r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
   dMdt[0] = sum(dMdt[1:])
   return dMdt
 
@@ -97,7 +102,22 @@ for iter in range(1):
   soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method=method)# rtol=1e-4, first_step=1e-6, max_step=1e-2)
   #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
   m = soln.y[0]
-  plt.plot(soln.t, (M_0-m)/M_0 * 100, label=f'Distribution', c='C1', alpha=1.0)
+  PD = (M_0-m)/M_0 * 100
+  plt.plot(soln.t, PD, label=f'Distribution', c='C1', alpha=1.0)
+
+# read in time series (true curve)
+exptdata = pd.read_csv(exptfile)
+
+plt.errorbar(exptdata['Time (min)'], exptdata['% dissolved'], yerr=exptdata['SEM'], label='Experiment', color='C2')
+
+
+print(soln.t, exptdata['Time (min)'])
+printtable = True
+if printtable:
+  for time,pd in zip(soln.t, PD):
+    # https://stackoverflow.com/questions/55239065/checking-if-a-specific-float-value-is-in-list-array-in-python-numpy
+    if np.any(np.isclose(time, exptdata['Time (min)'], rtol=1)):
+      print(time, pd)
 
 if V*Cs/M_0*100 >  100: lim=100
 else: lim= V*Cs/M_0*100
@@ -106,5 +126,6 @@ plt.xlabel('Time (min)', fontweight='bold')
 plt.ylabel('Mass Dissociated (%)', fontweight='bold')
 #plt.ylim([0, V*Cs/M_0*100*1.2])
 plt.grid()
-plt.legend()
+plt.legend(title=solvent)
+
 plt.show()
