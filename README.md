@@ -13,9 +13,10 @@ Contents:
 =============
 
 * data/ : contains the parameter files, distribution of particle radii and % mass, and k
-* Mass_Dissoc_dr_distribution_reader.py : reads data (distribution, params, and experimental data), solved and plots % dissolved over time
+* Mass_Dissoc_dr_distribution_reader.py : reads data (distribution, params, and experimental data), solved and plots % dissolved over time, with h(r_i) = r_i where r_i decreases with time
 
 Previous versions:
+* Mass_Dissoc_distribution_reader.py : reads data (distribution, params, and experimental data), solved and plots % dissolved over time - doesn't account for decreasing radius as fn of time
 * Mass_Dissoc_distribution_reader.py : 
 * Mass_Dissoc_dMdrdz.py : (monodisperse) solves dM/dt the 'simple' way with r=r0, then accounting for the fact that dr & dz are functions of dM
 * Mass_Dissoc_v0.py solve dM/dt and dr/dt for homogeneous particle distribution with radius r = r0(M/M0)**1/3
