@@ -113,13 +113,18 @@ exptdata = pd.read_csv(exptfile)
 plt.errorbar(exptdata['Time (min)'], exptdata['% dissolved'], yerr=exptdata['SEM'], label='Experiment', color='C2')
 
 
-print(soln.t, exptdata['Time (min)'])
 printtable = True
 if printtable:
+  print('==================')
+  print('Printing predicted % dissolved data for time points matching these files:')
+  print(filename)
+  print(paramfile)
+  print(exptfile)
+  print('Time (min),% dissolved')
   for time,pd in zip(soln.t, PD):
     # https://stackoverflow.com/questions/55239065/checking-if-a-specific-float-value-is-in-list-array-in-python-numpy
-    if np.any(np.isclose(time, exptdata['Time (min)'], rtol=1)):
-      print(time, pd)
+    if np.any(np.isclose(time, exptdata['Time (min)'], rtol=1e-4)):
+      print('%i,%.3f'%(time, pd))
 
 if V*Cs/M_0*100 >  100: lim=100
 else: lim= V*Cs/M_0*100
