@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 import sys
 
 # read in command-line arguments, filenames and solver method
-drug='Ritonavir'#sys.argv[1] # e.g. Ritonavir
-solvent='PS80'#sys.argv[2] # e.g. PBS
+drug='Meloxicam'#sys.argv[1] # e.g. Ritonavir
+solvent='POE'#sys.argv[2] # e.g. PBS
 method='RK45' #sys.argv[3] # such as RK45 or Radau
 
 # 
@@ -45,7 +45,7 @@ interval=5
 ###################
 # Read in data
 r0_read, M0_read = np.loadtxt(filename, dtype=float, delimiter=',', unpack=True, skiprows=1)
-r0_read = r0_read
+r0_read = r0_read/2
 
 N = len(M0_read)
 M0 = np.zeros(N+1)
@@ -60,24 +60,30 @@ def z(r, r_0):
   return 3 * D / (q * h(r) * r_0)
 
 # Define the differential equation
-def dMdt(t, M, M_0, Cs, V):
+def dMdt(t, M, M_0, Cs, V, Csabl):
   r = r_0 * (M/M_0)**(1/3)
-  return -z(r, r_0) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
+  return -z(r, r_0) * (Csabl/Cs) * M_0**(1/3) * M**(2/3) * (Cs - (M_0 - M) / V) if M > 0 else 0
 
 # Define the function to solve the differential equation and calculate the error
-def solve_differential(z_var):
+def solve_differential(z_var, Csabl):
   t_span = (0, tmax)
   t_eval = np.arange(0, tmax, interval)
-  solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V), t_eval=t_eval, method=method)
+  solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V, Csabl), t_eval=t_eval, method=method)
   #solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V), t_eval=t_eval, method='RK45')
   M = solution.y[0]
   return t_eval, M 
 
 # Solve the differential equation with z
+# Csabl = Cs
 zinit=3 * D / (q * hcrit * r_0)
 print(f"M_0: {M_0}, Cs: {Cs}, V: {V}, r_0:{r_0}, hcrit: {hcrit}, zinit: {zinit}")
-t_eval, M = solve_differential(zinit)
+t_eval, M = solve_differential(zinit, Cs)
 plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple')
+
+# Csabl = Cs/10
+zinit=3 * D / (q * hcrit * r_0)
+t_eval, M = solve_differential(zinit, Cs/10)
+plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple, Csabl=Cs/10', color='C3')
 
 
 # distribution of N equations
@@ -119,11 +125,11 @@ for iter in range(1):
   M0 *= M_0/100 # convert mass percent to mass, % to ratio (0 to 1) and multiply by M_0
   r0[1:] = r0_read
 
-  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V, Cs*1.1), t_eval=t_eval, method=method)# rtol=1e-4, first_step=1e-6, max_step=1e-2)
+  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V, Cs/10), t_eval=t_eval, method=method)# rtol=1e-4, first_step=1e-6, max_step=1e-2)
   #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
   m = soln.y[0]
   PD = (M_0-m)/M_0 * 100
-  plt.plot(soln.t, PD, label=f'Distribution 2', c='C4', alpha=1.0)
+  plt.plot(soln.t, PD, label=f'Distribution Csabl = Cs/10', c='C4', alpha=1.0)
 
 
 # read in time series (true curve)
