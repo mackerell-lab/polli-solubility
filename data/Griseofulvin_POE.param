@@ -2,5 +2,6 @@ Solubility (mg/mL), 0.155
 Particle Density (mg/cm3), 1367.5
 M0 (mg), 5
 V (mL), 100
-D (cm2/min), 0.0000381
-hcrit (cm), 0.0016
+D (cm2/min), 0.0000679
+hfixed (cm), 0.0012
+r_0 (cm), 0.00045
