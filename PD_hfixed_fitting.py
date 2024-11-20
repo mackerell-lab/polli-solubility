@@ -161,8 +161,8 @@ if printtable:
 
 # RMSE(h_fixed) curve
 plt.plot(h_array, errorray, c="black", linewidth = 2)
-plt.xlabel('h (cm)', fontweight='bold', fontsize=22)
-plt.ylabel('RMSE', fontweight='bold', fontsize=22)
+plt.xlabel(r'h$\bf_{fixed}$ (cm)', fontweight='bold', fontsize=22)
+plt.ylabel('RMSE (% PD)', fontweight='bold', fontsize=22)
 plt.xticks(fontweight='bold', fontsize=15)
 plt.yticks(fontweight='bold', fontsize=15)
 ax = plt.gca()  # Get the current axis
