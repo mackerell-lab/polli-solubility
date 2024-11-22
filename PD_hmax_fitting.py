@@ -122,6 +122,7 @@ def predict_PD(h_max):
 t_eval = np.arange(0, tmax+interval, interval)
 prec=1.0
 min_err = np.inf
+error_tolerance = 0.5
 h_opt = -1
 # this is now h_max, with the piece-wise model of h(r)
 h_array = np.arange(1, 150+prec, prec) # defined in microns for convenience later
@@ -131,7 +132,7 @@ for i in range(h_array.size):
   time, PD = predict_PD(h_max)
   err = rmse(PD, exptdata['% dissolved'])
   errorray[i] = err  
-  if err < min_err:
+  if err + error_tolerance < min_err:
     min_err = err
     h_opt = h_max
 

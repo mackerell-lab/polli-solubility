@@ -124,6 +124,7 @@ def predict_PD(h):
 t_eval = np.arange(0, tmax+interval, interval)
 prec=1.0
 min_err = np.inf
+error_tolerance = 0.5
 h_opt = -1
 h_array = np.arange(1, 100+prec, prec)
 errorray= np.zeros(h_array.size)
@@ -133,7 +134,7 @@ for i in range(h_array.size):
   #plt.plot(time, PD, c='C1', alpha=0.2)
   err = rmse(PD, exptdata['% dissolved'])
   errorray[i] = err  
-  if err < min_err:
+  if err + error_tolerance < min_err:
     min_err = err
     h_opt = h
 
