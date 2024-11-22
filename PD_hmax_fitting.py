@@ -1,7 +1,8 @@
 # Distribution, with diminishing h (r_i decreases)
 # Key equations:
 # r_i = r0_i * (M_i/M0_i)**(1/3)
-# Z(r_i, r0_i) = 3 * D / (q * h(r_i) * r0_i)
+# h_i = r_i if r_i < h_max else h_max
+# Z(r_i, r0_i) = 3 * D / (q * h_i * r0_i)
 # dM_i/dt = -Z(r_i, r0_i) M0_i**(1/3) M_i**(2/3) ( Cs - (M0 - M)/V)
 
 import numpy as np
@@ -56,8 +57,8 @@ r0 = np.zeros(N+1)
 # read in time series (true curve)
 exptdata = pd.read_csv(exptfile)
 
-#def h(r):
- # return r if r < hcrit else hcrit
+def h(r, h_max):
+  return r if r < h_max else h_max
 
 def z(h, r_0):
   return 3 * D / (q * h * r_0)
@@ -72,25 +73,22 @@ def solve_differential(z_var, h):
   t_span = (0, tmax)
   t_eval = np.arange(0, tmax+interval, interval)
   solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V, h), t_eval=t_eval, method=method)
-  #solution = solve_ivp(dMdt, t_span, [M_0], args=(M_0, Cs, V), t_eval=t_eval, method='RK45')
   M = solution.y[0]
   return t_eval, M 
 
 # Solve the differential equation with z
 zinit=3 * D / (q * hcrit * r_0)
-#print(f"M_0: {M_0}, Cs: {Cs}, V: {V}, r_0:{r_0}, hcrit: {hcrit}, zinit: {zinit}")
 t_eval, M = solve_differential(zinit, hcrit)
-#plt.plot(t_eval, (M_0-M)/M_0*100, label='Simple')
 
 
 # distribution of N equations
-def Nsystem(t, M, M0, r0, Cs, V, h):
+def Nsystem(t, M, M0, r0, Cs, V, h_max):
   n = len(M) # N + 1, for [M, M_1, M_2, ..., M_N]
   dMdt = np.zeros(n) # initialize then assign
   for i in range(1,n):
-    #dMdt[i] = -z(r0[i], r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
-    #r_i = r0[i] * (M[i]/M0[i])**(1/3) if M[i] > 0 else 0
-    dMdt[i] = -z(h, r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
+    r_i = r0[i] * (M[i]/M0[i])**(1/3) if M[i] > 0 else 0
+    h_i = h(r_i, h_max)
+    dMdt[i] = -z(h_i, r0[i]) * M0[i]**(1/3) * M[i]**(2/3) * (Cs - (M0[0] - M[0]) / V) if M[i] > 0 else 0
   dMdt[0] = sum(dMdt[1:])
   return dMdt
 
@@ -104,9 +102,10 @@ def rmse(pred, expt):
   pd_subset = np.array(pd_subset)
   return np.sqrt(np.mean((pd_subset-expt)**2))
 
-# predict percent dissolved as function of const h
+# predict percent dissolved as function of h_max, defined with h(h_max, r_0)
+# NOTE: h_max must be in cm!!
 # return time and PD
-def predict_PD(h):
+def predict_PD(h_max):
   r0 = np.zeros(N+1)
   M0 = np.zeros(N+1)
   M0[0] = 100 # still in Mass Percent now
@@ -115,8 +114,7 @@ def predict_PD(h):
   M0 *= M_0/100 # convert mass percent to mass, % to ratio (0 to 1) and multiply by M_0
   r0[1:] = r0_read
 
-  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V, h), t_eval=t_eval, method=method)# rtol=1e-4, first_step=1e-6, max_step=1e-2)
-  #soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V), t_eval=t_eval, method='RK45', rtol=1e-4)
+  soln = solve_ivp(Nsystem, (0,tmax), M0, args=(M0, r0, Cs, V, h_max), t_eval=t_eval, method=method)
   m = soln.y[0]
   PD = (M_0-m)/M_0 * 100
   return soln.t, PD
@@ -125,17 +123,17 @@ t_eval = np.arange(0, tmax+interval, interval)
 prec=1.0
 min_err = np.inf
 h_opt = -1
-h_array = np.arange(1, 100+prec, prec)
+# this is now h_max, with the piece-wise model of h(r)
+h_array = np.arange(1, 150+prec, prec) # defined in microns for convenience later
 errorray= np.zeros(h_array.size)
 for i in range(h_array.size):
-  h=h_array[i]/10000 # convert to cm units
-  time, PD = predict_PD(h)
-  #plt.plot(time, PD, c='C1', alpha=0.2)
+  h_max=h_array[i]/10**4 # convert to cm units before predicting!
+  time, PD = predict_PD(h_max)
   err = rmse(PD, exptdata['% dissolved'])
   errorray[i] = err  
   if err < min_err:
     min_err = err
-    h_opt = h
+    h_opt = h_max
 
 # predict PD with optimal h
 time, PD = predict_PD(h_opt) # must give h in cm!!
@@ -163,9 +161,9 @@ if printtable:
 
 #################################################################
 
-# RMSE(h_fixed) curve
+# RMSE(h_max) curve
 plt.plot(h_array, errorray, c="black", linewidth = 2)
-plt.xlabel(r'h$\bf_{fixed}$ ($\bf{\mu}$m)', fontweight='bold', fontsize=22)
+plt.xlabel(r'h$\bf_{max}$ ($\bf{\mu}$m)', fontweight='bold', fontsize=22)
 plt.ylabel('RMSE (% PD)', fontweight='bold', fontsize=22)
 plt.xticks(fontweight='bold', fontsize=15)
 plt.yticks(fontweight='bold', fontsize=15)
