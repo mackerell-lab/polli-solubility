@@ -142,7 +142,7 @@ time, PD = predict_PD(h_opt) # must give h in cm!!
 
 # NOTE: these are in microns, since h_array is also in microns (for convenience)
 print("Tabulated h and RMSE")
-print("h (cm), RMSE")
+print("h (micron), RMSE")
 for h_interest in [7., 12., 16.]:
   print('%.0f,%.2f'%(h_interest, errorray[np.where(h_interest == h_array)][0]))
 print("\n****Optimal h: %.0f"%(h_opt*10**4), "RMSE: %.2f"%min_err)
